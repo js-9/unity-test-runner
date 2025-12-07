@@ -12,15 +12,15 @@ elif [[ -n "$UNITY_SERIAL" ]]; then
   #
   # This will return the license that is currently in use.
   #
-  # Use an array to safely pass arguments with special characters (including quotes, *, #, }, >, etc.)
-  unity_args=(
-    -logFile /dev/stdout
-    -quit
-    -returnlicense
-    -username "$UNITY_EMAIL"
-    -password "$UNITY_PASSWORD"
-    -projectPath /BlankProject
-  )
+  # Use printf %q to safely escape special characters (including quotes, *, #, }, >, etc.)
+  UNITY_EMAIL_ESCAPED=$(printf '%q' "$UNITY_EMAIL")
+  UNITY_PASSWORD_ESCAPED=$(printf '%q' "$UNITY_PASSWORD")
   
-  unity-editor "${unity_args[@]}"
+  eval "unity-editor \
+    -logFile /dev/stdout \
+    -quit \
+    -returnlicense \
+    -username $UNITY_EMAIL_ESCAPED \
+    -password $UNITY_PASSWORD_ESCAPED \
+    -projectPath /BlankProject"
 fi
