@@ -18,18 +18,18 @@ if [[ -n "$UNITY_SERIAL" && -n "$UNITY_EMAIL" && -n "$UNITY_PASSWORD" ]]; then
   while [[ $retry_count -lt 5 ]]
   do
     # Activate license
-    # Use printf %q to safely escape special characters (including quotes, *, #, }, >, etc.)
-    UNITY_SERIAL_ESCAPED=$(printf '%q' "$UNITY_SERIAL")
-    UNITY_EMAIL_ESCAPED=$(printf '%q' "$UNITY_EMAIL")
-    UNITY_PASSWORD_ESCAPED=$(printf '%q' "$UNITY_PASSWORD")
+    # Use an array to safely pass arguments with special characters (including quotes, *, #, }, >, etc.)
+    # This avoids shell interpretation issues with eval
+    unity_args=(
+      -logFile /dev/stdout
+      -quit
+      -serial "$UNITY_SERIAL"
+      -username "$UNITY_EMAIL"
+      -password "$UNITY_PASSWORD"
+      -projectPath /BlankProject
+    )
     
-    eval "unity-editor \
-      -logFile /dev/stdout \
-      -quit \
-      -serial $UNITY_SERIAL_ESCAPED \
-      -username $UNITY_EMAIL_ESCAPED \
-      -password $UNITY_PASSWORD_ESCAPED \
-      -projectPath /BlankProject"
+    unity-editor "${unity_args[@]}"
 
     # Store the exit code from the verify command
     UNITY_EXIT_CODE=$?
