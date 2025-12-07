@@ -326,9 +326,13 @@ class ImageEnvironmentFactory {
                 process.env[p.name] = p.value.toString();
                 continue;
             }
-            // Escape the value for shell: replace " with \" and \ with \\
-            const escapedValue = p.value.toString().replace(/\\/g, '\\\\').replace(/"/g, '\\"');
-            string += `--env ${p.name}="${escapedValue}" `;
+            // For values that might contain special characters, use single quotes to prevent shell interpretation
+            // But we need to handle single quotes in the value itself by ending the quote, adding escaped quote, and restarting
+            const value = p.value.toString();
+            // If value contains single quotes, we need to handle them specially
+            // Replace ' with '\'' (end quote, escaped quote, start new quote)
+            const safeValue = value.replace(/'/g, "'\\''");
+            string += `--env ${p.name}='${safeValue}' `;
         }
         return string;
     }
