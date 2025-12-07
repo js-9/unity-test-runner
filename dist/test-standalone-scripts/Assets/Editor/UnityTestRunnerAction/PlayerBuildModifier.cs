@@ -1,5 +1,6 @@
 using System;
 using System.Linq;
+using System.Reflection;
 using UnityEditor;
 using UnityEditor.TestTools;
 using UnityEngine;
@@ -51,7 +52,8 @@ namespace UnityTestRunnerAction
 
         private static void SetParallelLinking()
         {
-            string additionalArgs = PlayerSettings.additionalIl2CppArgs;
+            // Get current additionalIl2CppArgs using reflection for Unity version compatibility
+            string additionalArgs = GetAdditionalIl2CppArgs();
 
             // Determine number of parallel jobs (use CPU count, or default to 2)
             int numJobs = Environment.ProcessorCount;
@@ -86,8 +88,49 @@ namespace UnityTestRunnerAction
                     break;
             }
 
-            PlayerSettings.additionalIl2CppArgs = additionalArgs;
+            SetAdditionalIl2CppArgs(additionalArgs);
             Debug.Log($"IL2CPP parallel linking enabled with {numJobs} jobs on host platform {hostPlatform}. Additional args: {additionalArgs}");
+        }
+
+        private static string GetAdditionalIl2CppArgs()
+        {
+            // Try to get additionalIl2CppArgs using reflection for Unity version compatibility
+            var property = typeof(PlayerSettings).GetProperty("additionalIl2CppArgs", BindingFlags.Public | BindingFlags.Static);
+            if (property != null)
+            {
+                return (string)property.GetValue(null) ?? string.Empty;
+            }
+
+            // Fallback: try SetAdditionalIl2CppArgs/GetAdditionalIl2CppArgs methods if available
+            var getMethod = typeof(PlayerSettings).GetMethod("GetAdditionalIl2CppArgs", BindingFlags.Public | BindingFlags.Static);
+            if (getMethod != null)
+            {
+                return (string)getMethod.Invoke(null, null) ?? string.Empty;
+            }
+
+            // If neither is available, return empty string
+            return string.Empty;
+        }
+
+        private static void SetAdditionalIl2CppArgs(string args)
+        {
+            // Try to set additionalIl2CppArgs using reflection for Unity version compatibility
+            var property = typeof(PlayerSettings).GetProperty("additionalIl2CppArgs", BindingFlags.Public | BindingFlags.Static);
+            if (property != null)
+            {
+                property.SetValue(null, args);
+                return;
+            }
+
+            // Fallback: try SetAdditionalIl2CppArgs method if available
+            var setMethod = typeof(PlayerSettings).GetMethod("SetAdditionalIl2CppArgs", BindingFlags.Public | BindingFlags.Static);
+            if (setMethod != null)
+            {
+                setMethod.Invoke(null, new object[] { args });
+                return;
+            }
+
+            Debug.LogWarning("Could not set additionalIl2CppArgs - API not available in this Unity version");
         }
     }
 }
