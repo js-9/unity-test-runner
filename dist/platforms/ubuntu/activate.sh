@@ -19,15 +19,12 @@ if [[ -n "$UNITY_SERIAL" && -n "$UNITY_EMAIL" && -n "$UNITY_PASSWORD" ]]; then
   do
     # Activate license
     # Use an array to safely pass arguments with special characters (including quotes, *, #, }, >, etc.)
-    # This avoids shell interpretation issues with eval
-    unity_args=(
-      -logFile /dev/stdout
-      -quit
-      -serial "$UNITY_SERIAL"
-      -username "$UNITY_EMAIL"
-      -password "$UNITY_PASSWORD"
-      -projectPath /BlankProject
-    )
+    # Build the array element by element to ensure proper handling of special characters
+    unity_args=(-logFile /dev/stdout -quit)
+    unity_args+=(-serial "$UNITY_SERIAL")
+    unity_args+=(-username "$UNITY_EMAIL")
+    unity_args+=(-password "$UNITY_PASSWORD")
+    unity_args+=(-projectPath /BlankProject)
     
     unity-editor "${unity_args[@]}"
 
