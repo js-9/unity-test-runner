@@ -3,7 +3,7 @@ class ImageEnvironmentFactory {
     const environmentVariables = ImageEnvironmentFactory.getEnvironmentVariables(parameters);
     let string = '';
     for (const p of environmentVariables) {
-      if (p.value === '' || p.value === undefined) {
+      if (p.value === '' || p.value === undefined || p.value === null) {
         continue;
       }
       if (p.name !== 'ANDROID_KEYSTORE_BASE64' && p.value.toString().includes(`\n`)) {
@@ -12,7 +12,9 @@ class ImageEnvironmentFactory {
         continue;
       }
 
-      string += `--env ${p.name}="${p.value}" `;
+      // Escape the value for shell: replace " with \" and \ with \\
+      const escapedValue = p.value.toString().replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+      string += `--env ${p.name}="${escapedValue}" `;
     }
 
     return string;
